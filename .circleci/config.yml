@@ -22,7 +22,7 @@ commands:
   publish_workload:
     description: test8
     parameters: pod-only.yaml
-      workload: test8
+      workload: unknown
         description: test8
         type: string
     steps:
