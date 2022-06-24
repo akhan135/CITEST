@@ -13,7 +13,7 @@ commands:
     description: Initializes Rafay CLI.
     parameters:
       rctl_api_key: b63cd4285dc1bf4cca48ce9af10c3b45560c22ad
-        description: RCTL_API_KEY
+        description: b63cd4285dc1bf4cca48ce9af10c3b45560c22ad
         type: env_var_name
         default: RCTL_API_KEY
       rctl_secret_key: a15e4d126759555972c1ddebe64b889cfb3c4cbde8a7fe9b3703a0d5a5461b19
