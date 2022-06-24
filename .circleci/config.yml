@@ -11,48 +11,7 @@ display:
 
 commands:
   init:
-    description: Initializes Rafay CLI.
-    parameters:
-      rctl_api_key: b63cd4285dc1bf4cca48ce9af10c3b45560c22ad
-        #description: Env variable storing your API key
-        type: env_var_name
-        default: RCTL_API_KEY
-      rctl_secret_key: a15e4d126759555972c1ddebe64b889cfb3c4cbde8a7fe9b3703a0d5a5461b19
-        description: Env variable storing your API Secret
-        type: env_var_name
-        default: RCTL_API_SECRET
-      rctl_rest_endpoint: console.rafay.dev
-        description: Env Variable storing your Rafay Rest Endpoint
-        type: env_var_name
-        default: RCTL_REST_ENDPOINT
-      rctl_project: akhaneks
-        description: Env Variable storing your Rafay Project
-        type: env_var_name
-        default: RCTL_PROJECT
-      rafay_username: amjad@rafay.co
-        description: Env variable storing your Username
-        type: env_var_name
-        default: RAFAY_USERNAME
-      rafay_registry: system-default-registry
-        description: Env Variable storing your Rafay Registry
-        type: env_var_name
-        default: RAFAY_REGISTRY_ENDPOINT
-      rctl_ops_endpoint: ops.rafay.dev
-        description: Env Variable storing your Rafay Ops Endpoint
-        type: env_var_name
-        default: RCTL_OPS_ENDPOINT
-      rafay_registry_secret:
-        description: Env Variable storing your Rafay Registry Secret
-        type: env_var_name
-        default: RAFAY_REGISTRY_SECRET
-      rafay_organization_label:
-        description: Env Variable storing your Rafay Organization Label
-        type: env_var_name
-        default: RAFAY_ORGANIZATION_LABEL
-      rafay_cli_log:
-        description: Env Variable storing your Rafay CLI Log
-        type: env_var_name
-        default: RAFAY_CLI_LOG_FILE_LOCATION
+
     steps:
       - run:
          command: |
