@@ -1,0 +1,51 @@
+orbs: 
+  rafay: rafaysystems/rafay@1.0.7
+version: 2.1
+jobs:
+  build-job:
+    executor: rafay/default
+    steps:
+      - run: echo "Run your build steps here"
+  Publish-Workload:
+    executor: rafay/default
+    steps:
+      - checkout
+      - rafay/init
+      - rafay/add_workload:
+          yaml_file: workload.yml
+      - rafay/set_workload_image:
+          workload: demo-circleci
+          container: httpbin
+          image: $RAFAY_REGISTRY_ENDPOINT/$RAFAY_ORGANIZATION_LABEL/httpbin
+          tag: $CIRCLE_SHA1
+      - rafay/publish_workload:
+          workload: demo-circleci
+      - rafay/check_workload_status:
+          workload: demo-circleci
+  Test-Workload:
+    executor: rafay/default
+    steps:
+      - run: echo "Run your tests here"
+  Delete-Workload:
+    executor: rafay/default
+    steps:
+      - rafay/init
+      - rafay/delete_workload:
+          workload: demo-circleci
+workflows:
+  version: 2
+  build-and-publish-workload-to-rafay:
+    jobs:
+      - build-job
+      - Publish-Workload:
+          requires:
+            - build-job
+      - Test-Workload:
+          requires:
+            - build-job
+            - Publish-Workload
+      - Delete-Workload:
+          requires:
+            - build-job
+            - Publish-Workload
+            - Test-Workload
