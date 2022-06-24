@@ -1,51 +1,137 @@
-orbs: 
-  rafay: rafaysystems/rafay@1.0.7
+orb# This code is licensed from CircleCI to the user under the MIT license. See
+# https://circleci.com/orbs/registry/licensing for details.
 version: 2.1
-jobs:
-  build-job:
-    executor: rafay/default
+description: |
+  Deploy a Kubernetes Cluster from CircleCI using the Rafay Systems Platform. Rafay’s turnkey SaaS platform automates the highly complex deployment and operational workflows that DevOps and SRE teams implement to operate Kubernetes clusters and Kubernetes-resident apps across clusters in cloud and data center environments. The platform accelerates organizations’ respective application modernization journeys by abstracting away the complexities of Kubernetes and other open-source container management tools. Learn more: https://rafay.co/enterprise-integrations/circleci
+
+display:
+  source_url: https://github.com/RafaySystems/circleci-orb
+  home_url: https://rafay.co
+
+commands:
+  init:
+    description: Initializes Rafay CLI.
+    parameters:
+      rctl_api_key: b63cd4285dc1bf4cca48ce9af10c3b45560c22ad
+        description: Env variable storing your API key
+        type: env_var_name
+        default: RCTL_API_KEY
+      rctl_secret_key: a15e4d126759555972c1ddebe64b889cfb3c4cbde8a7fe9b3703a0d5a5461b19
+        description: Env variable storing your API Secret
+        type: env_var_name
+        default: RCTL_API_SECRET
+      rctl_rest_endpoint: console.rafay.dev
+        description: Env Variable storing your Rafay Rest Endpoint
+        type: env_var_name
+        default: RCTL_REST_ENDPOINT
+      rctl_project: akhaneks
+        description: Env Variable storing your Rafay Project
+        type: env_var_name
+        default: RCTL_PROJECT
+      rafay_username: amjad@rafay.co
+        description: Env variable storing your Username
+        type: env_var_name
+        default: RAFAY_USERNAME
+      rafay_registry: system-default-registry
+        description: Env Variable storing your Rafay Registry
+        type: env_var_name
+        default: RAFAY_REGISTRY_ENDPOINT
+      rctl_ops_endpoint: ops.rafay.dev
+        description: Env Variable storing your Rafay Ops Endpoint
+        type: env_var_name
+        default: RCTL_OPS_ENDPOINT
+      rafay_registry_secret:
+        description: Env Variable storing your Rafay Registry Secret
+        type: env_var_name
+        default: RAFAY_REGISTRY_SECRET
+      rafay_organization_label:
+        description: Env Variable storing your Rafay Organization Label
+        type: env_var_name
+        default: RAFAY_ORGANIZATION_LABEL
+      rafay_cli_log:
+        description: Env Variable storing your Rafay CLI Log
+        type: env_var_name
+        default: RAFAY_CLI_LOG_FILE_LOCATION
     steps:
-      - run: echo "Run your build steps here"
-  Publish-Workload:
-    executor: rafay/default
+      - run:
+         command: |
+           wget -O ${HOME}/rctl-linux-amd64.tar.bz2 https://s3-us-west-2.amazonaws.com/rafay-prod-cli/publish/rctl-linux-amd64.tar.bz2
+           tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
+           chmod 0755 ${HOME}/rctl
+           mkdir -p ${HOME}/.rafay/cli
+  publish_workload:
+    description: test8
+    parameters: pod-only.yaml
+      workload: test8
+        description: test8
+        type: string
     steps:
-      - checkout
-      - rafay/init
-      - rafay/add_workload:
-          yaml_file: workload.yml
-      - rafay/set_workload_image:
-          workload: demo-circleci
-          container: httpbin
-          image: $RAFAY_REGISTRY_ENDPOINT/$RAFAY_ORGANIZATION_LABEL/httpbin
-          tag: $CIRCLE_SHA1
-      - rafay/publish_workload:
-          workload: demo-circleci
-      - rafay/check_workload_status:
-          workload: demo-circleci
-  Test-Workload:
-    executor: rafay/default
-    steps:
-      - run: echo "Run your tests here"
-  Delete-Workload:
-    executor: rafay/default
-    steps:
-      - rafay/init
-      - rafay/delete_workload:
-          workload: demo-circleci
-workflows:
-  version: 2
-  build-and-publish-workload-to-rafay:
-    jobs:
-      - build-job
-      - Publish-Workload:
-          requires:
+      - run:
+         ${HOME}/rctl publish workload pod-only.yaml
+
+    
+
+executors:
+  default:
+    description: |
+      This is a machine executor.
+    machine: true
+
+examples:
+  build_and_deploy_workload_to_rafay:
+    description: |
+      Builds the source code from your repo as a container image and deploys it as a workload to rafay platform.
+    usage:
+      orbs:
+        rafay: rafaysystems/rafay@x.y.z
+      version: 2.1
+      jobs:
+        build-job:
+            executor: rafay/default
+            steps:
+              - run: echo "Run your build steps here"
+        Publish-Workload:
+            executor: rafay/default
+            steps:
+              - checkout
+              - rafay/init
+              - rafay/add_workload:
+                    yaml_file: workload.yml
+              - rafay/set_workload_image:
+                    workload: demo-circleci
+                    container: httpbin
+                    image: $RAFAY_REGISTRY_ENDPOINT/$RAFAY_ORGANIZATION_LABEL/httpbin
+                    tag: $CIRCLE_SHA1
+              - rafay/publish_workload:
+                    workload: demo-circleci
+              - rafay/check_workload_status:
+                    workload: demo-circleci
+        Test-Workload:
+            executor: rafay/default
+            steps:
+              - run: echo "Run your tests here"
+        Delete-Workload:
+            executor: rafay/default
+            steps:
+              - rafay/init
+              - rafay/delete_workload:
+                  workload: demo-circleci
+
+
+      workflows:
+        version: 2
+        build-and-publish-workload-to-rafay:
+          jobs:
             - build-job
-      - Test-Workload:
-          requires:
-            - build-job
-            - Publish-Workload
-      - Delete-Workload:
-          requires:
-            - build-job
-            - Publish-Workload
-            - Test-Workload
+            - Publish-Workload:
+                requires:
+                  - build-job
+            - Test-Workload:
+                requires:
+                  - build-job
+                  - Publish-Workload
+            - Delete-Workload:
+                requires:
+                  - build-job
+                  - Publish-Workload
+                  - Test-Workload
