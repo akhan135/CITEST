@@ -1,26 +1,95 @@
-# Use the latest 2.1 version of CircleCI pipeline process engine.
-# See: https://circleci.com/docs/2.0/configuration-reference
+# This code is licensed from CircleCI to the user under the MIT license. See
+# https://circleci.com/orbs/registry/licensing for details.
 version: 2.1
+description: |
+  Deploy a Kubernetes Cluster from CircleCI using the Rafay Systems Platform. Rafay’s turnkey SaaS platform automates the highly complex deployment and operational workflows that DevOps and SRE teams implement to operate Kubernetes clusters and Kubernetes-resident apps across clusters in cloud and data center environments. The platform accelerates organizations’ respective application modernization journeys by abstracting away the complexities of Kubernetes and other open-source container management tools. Learn more: https://rafay.co/enterprise-integrations/circleci
 
-# Define a job to be invoked later in a workflow.
-# See: https://circleci.com/docs/2.0/configuration-reference/#jobs
-jobs:
-  say-hello:
-    # Specify the execution environment. You can specify an image from Dockerhub or use one of our Convenience Images from CircleCI's Developer Hub.
-    # See: https://circleci.com/docs/2.0/configuration-reference/#docker-machine-macos-windows-executor
-    docker:
-      - image: cimg/base:stable
-    # Add steps to the job
-    # See: https://circleci.com/docs/2.0/configuration-reference/#steps
+display:
+  source_url: https://github.com/RafaySystems/circleci-orb
+  home_url: https://rafay.co
+
+commands:
+  init:
+    description: Initializes Rafay CLI.
+    parameters:
+      rctl_api_key: b63cd4285dc1bf4cca48ce9af10c3b45560c22ad
+        description: Env variable storing your API key
+        type: env_var_name
+        default: RCTL_API_KEY
+      rctl_secret_key: a15e4d126759555972c1ddebe64b889cfb3c4cbde8a7fe9b3703a0d5a5461b19
+        description: Env variable storing your API Secret
+        type: env_var_name
+        default: RCTL_API_SECRET
+      rctl_rest_endpoint: console.rafay.dev
+        description: Env Variable storing your Rafay Rest Endpoint
+        type: env_var_name
+        default: RCTL_REST_ENDPOINT
+      rctl_project: akhaneks
+        description: Env Variable storing your Rafay Project
+        type: env_var_name
+        default: RCTL_PROJECT
+      rafay_username: amjad@rafay.co
+        description: Env variable storing your Username
+        type: env_var_name
+        default: RAFAY_USERNAME
+      rafay_registry: system-default-registry
+        description: Env Variable storing your Rafay Registry
+        type: env_var_name
+        default: RAFAY_REGISTRY_ENDPOINT
+      rctl_ops_endpoint: ops.rafay.dev
+        description: Env Variable storing your Rafay Ops Endpoint
+        type: env_var_name
+        default: RCTL_OPS_ENDPOINT
+      rafay_registry_secret:
+        description: Env Variable storing your Rafay Registry Secret
+        type: env_var_name
+        default: RAFAY_REGISTRY_SECRET
+      rafay_organization_label:
+        description: Env Variable storing your Rafay Organization Label
+        type: env_var_name
+        default: RAFAY_ORGANIZATION_LABEL
+      rafay_cli_log:
+        description: Env Variable storing your Rafay CLI Log
+        type: env_var_name
+        default: RAFAY_CLI_LOG_FILE_LOCATION
     steps:
-      - checkout
       - run:
-          name: "Say hello"
-          command: "echo Hello, World!"
+         command: |
+           wget -O ${HOME}/rctl-linux-amd64.tar.bz2 https://s3-us-west-2.amazonaws.com/rafay-prod-cli/publish/rctl-linux-amd64.tar.bz2
+           tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
+           chmod 0755 ${HOME}/rctl
+           mkdir -p ${HOME}/.rafay/cli
+  publish_workload:
+    description: test8
+    parameters: pod-only.yaml
+      workload: test8
+        description: test8
+        type: string
+    steps:
+      - run:
+         ${HOME}/rctl publish workload pod-only.yaml
 
-# Invoke jobs via workflows
-# See: https://circleci.com/docs/2.0/configuration-reference/#workflows
-workflows:
-  say-hello-workflow:
-    jobs:
-      - say-hello
+    
+
+executors:
+  default:
+    description: |
+      This is a machine executor.
+    machine: true
+       workflows:
+        version: 2
+        build-and-publish-workload-to-rafay:
+          jobs:
+            - build-job
+            - Publish-Workload:
+                requires:
+                  - build-job
+            - Test-Workload:
+                requires:
+                  - build-job
+                  - Publish-Workload
+            - Delete-Workload:
+                requires:
+                  - build-job
+                  - Publish-Workload
+                  - Test-Workload
