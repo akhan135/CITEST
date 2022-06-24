@@ -32,3 +32,22 @@ jobs:
       - rafay/init
       - rafay/delete_workload:
           workload: demo-circleci
+workflows:
+  version: 2
+  build-and-publish-workload-to-rafay:
+    jobs:
+      - build-job
+      - Publish-Workload:
+          requires:
+            - build-job
+      - Test-Workload:
+          requires:
+            - build-job
+            - Publish-Workload
+      - Delete-Workload:
+          requires:
+            - build-job
+            - Publish-Workload
+            - Test-Workload         
+         
+
