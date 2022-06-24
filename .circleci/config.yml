@@ -21,9 +21,9 @@ commands:
            chmod 0755 ${HOME}/rctl
            mkdir -p ${HOME}/.rafay/cli
   publish_workload:
-    #description: test8
+    description: test8
     parameters: pod-only.yaml
-      workload: test8
+      workload: pod-only.yaml
         description: test8
         type: string
     steps:
