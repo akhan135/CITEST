@@ -1,17 +1,59 @@
+# This code is licensed from CircleCI to the user under the MIT license.
+# See here for details: https://circleci.com/developer/orbs/licensing
 # This code is licensed from CircleCI to the user under the MIT license. See
 # https://circleci.com/orbs/registry/licensing for details.
 version: 2.1
 description: |
   Deploy a Kubernetes Cluster from CircleCI using the Rafay Systems Platform. Rafay’s turnkey SaaS platform automates the highly complex deployment and operational workflows that DevOps and SRE teams implement to operate Kubernetes clusters and Kubernetes-resident apps across clusters in cloud and data center environments. The platform accelerates organizations’ respective application modernization journeys by abstracting away the complexities of Kubernetes and other open-source container management tools. Learn more: https://rafay.co/enterprise-integrations/circleci
-orbs: 
-  rafay: rafaysystems/rafay@1.0.7
+
 display:
   source_url: https://github.com/RafaySystems/circleci-orb
   home_url: https://rafay.co
 
 commands:
   init:
-
+    description: Initializes Rafay CLI.
+    parameters:
+      rctl_api_key:
+        description: Env variable storing your API key
+        type: env_var_name
+        default: RCTL_API_KEY
+      rctl_secret_key:
+        description: Env variable storing your API Secret
+        type: env_var_name
+        default: RCTL_API_SECRET
+      rctl_rest_endpoint:
+        description: Env Variable storing your Rafay Rest Endpoint
+        type: env_var_name
+        default: RCTL_REST_ENDPOINT
+      rctl_project:
+        description: Env Variable storing your Rafay Project
+        type: env_var_name
+        default: RCTL_PROJECT
+      rafay_username:
+        description: Env variable storing your Username
+        type: env_var_name
+        default: RAFAY_USERNAME
+      rafay_registry:
+        description: Env Variable storing your Rafay Registry
+        type: env_var_name
+        default: RAFAY_REGISTRY_ENDPOINT
+      rctl_ops_endpoint:
+        description: Env Variable storing your Rafay Ops Endpoint
+        type: env_var_name
+        default: RCTL_OPS_ENDPOINT
+      rafay_registry_secret:
+        description: Env Variable storing your Rafay Registry Secret
+        type: env_var_name
+        default: RAFAY_REGISTRY_SECRET
+      rafay_organization_label:
+        description: Env Variable storing your Rafay Organization Label
+        type: env_var_name
+        default: RAFAY_ORGANIZATION_LABEL
+      rafay_cli_log:
+        description: Env Variable storing your Rafay CLI Log
+        type: env_var_name
+        default: RAFAY_CLI_LOG_FILE_LOCATION
     steps:
       - run:
          command: |
@@ -19,24 +61,170 @@ commands:
            tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
            chmod 0755 ${HOME}/rctl
            mkdir -p ${HOME}/.rafay/cli
-#   publish_workload:
-#     description: test8
-#     parameters: pod-only.yaml
-#       workload: kvxdqvm
-#         description: test8
-#         type: string
+
+  add_workload:
+    description: Adds a workload to Rafay Platform.
+    parameters:
+      yaml_file:
+        description: Yaml file consisting of the workload config
+        type: string
     steps:
       - run:
-         ${HOME}/rctl publish workload pod-only.yaml
+         ${HOME}/rctl create workload <<parameters.yaml_file>>
 
-    
+  set_workload_image:
+    description: Sets an image to a container in a workload
+    parameters:
+      workload:
+        description: Name of the workload
+        type: string
+      container:
+        description: Name of the container in a workload
+        type: string
+      image:
+        description: Name of the Image
+        type: string
+      tag:
+        description: Tag of the Image
+        type: string
+    steps:
+      - run:
+         ${HOME}/rctl workload set-image <<parameters.workload>> <<parameters.container>> <<parameters.image>>:<<parameters.tag>>
+
+  update_workload:
+    description: Updates an already created workload on Rafay Platform.
+    parameters:
+      yaml_file:
+        description: Yaml file consisting of the workload config
+        type: string
+    steps:
+      - run:
+         ${HOME}/rctl update workload <<parameters.yaml_file>>
+
+  publish_workload:
+    description: Publish a workload on Rafay Platform.
+    parameters:
+      workload:
+        description: Name of the workload
+        type: string
+    steps:
+      - run:
+         ${HOME}/rctl publish workload <<parameters.workload>>
+
+  delete_workload:
+    description: Deletes a workload on Rafay Platform.
+    parameters:
+      workload:
+        description: Name of the workload
+        type: string
+    steps:
+      - run:
+         ${HOME}/rctl delete workload <<parameters.workload>>
+
+  check_workload_status:
+    description: Check the publish status of a workload on Rafay Platform.
+    parameters:
+      workload:
+        description: Name of the workload
+        type: string
+    steps:
+      - run:
+         command: |
+           workload_status="Not Ready"
+           workload_status_iterations=1
+           while [ "$workload_status" != "Ready" ];
+           do
+              workload_status=`${HOME}/rctl status workload <<parameters.workload>> -o json|jq .result[].status|tr -d '"'`
+              echo $workload_status
+              sleep 30
+              if [ $workload_status_iterations -ge 30 ];
+              then
+                  break
+              fi
+              if [ "$workload_status" = "Failed" ];
+              then
+                  echo "Workload Deployment Failed"
+                  break
+              fi
+              workload_status_iterations=$((workload_status_iterations+1))
+           done
+  configure_workload:
+    description: Configure the workload on Rafay Platform.
+    parameters:
+      yaml_file:
+        description: Yaml file consisting of the workload config
+        type: string
+      workload:
+        description: Name of the workload
+        type: string
+    steps:
+      - run:
+         command: |
+           LookupWorkload () {
+             local workload match="$1"
+             shift
+             for workload; do [[ "$workload" == "$match" ]] && echo "yes"; done
+             echo "no"
+           }
+           wl_tmp=`${HOME}/rctl get workload -o json | jq 'select(.result | length > 0)|.result[]|.name' |cut -d'"' -f2`
+           WL_TMP_ARRAY=( $wl_tmp )
+           wl_exist=$(LookupWorkload <<parameters.workload>> "${WL_TMP_ARRAY[@]}")
+           if [ "$wl_exist" == "no" ];
+           then
+             ${HOME}/rctl create workload <<parameters.yaml_file>>
+           else
+             ${HOME}/rctl update workload <<parameters.yaml_file>>
+           fi
+
 
 executors:
   default:
     description: |
       This is a machine executor.
     machine: true
-       workflows:
+
+examples:
+  build_and_deploy_workload_to_rafay:
+    description: |
+      Builds the source code from your repo as a container image and deploys it as a workload to rafay platform.
+    usage:
+      orbs:
+        rafay: rafaysystems/rafay@x.y.z
+      version: 2.1
+      jobs:
+        build-job:
+            executor: rafay/default
+            steps:
+              - run: echo "Run your build steps here"
+        Publish-Workload:
+            executor: rafay/default
+            steps:
+              - checkout
+              - rafay/init
+              - rafay/add_workload:
+                    yaml_file: workload.yml
+              - rafay/set_workload_image:
+                    workload: demo-circleci
+                    container: httpbin
+                    image: $RAFAY_REGISTRY_ENDPOINT/$RAFAY_ORGANIZATION_LABEL/httpbin
+                    tag: $CIRCLE_SHA1
+              - rafay/publish_workload:
+                    workload: demo-circleci
+              - rafay/check_workload_status:
+                    workload: demo-circleci
+        Test-Workload:
+            executor: rafay/default
+            steps:
+              - run: echo "Run your tests here"
+        Delete-Workload:
+            executor: rafay/default
+            steps:
+              - rafay/init
+              - rafay/delete_workload:
+                  workload: demo-circleci
+
+
+      workflows:
         version: 2
         build-and-publish-workload-to-rafay:
           jobs:
