@@ -19,12 +19,12 @@ commands:
            tar -C ${HOME} -xf ${HOME}/rctl-linux-amd64.tar.bz2
            chmod 0755 ${HOME}/rctl
            mkdir -p ${HOME}/.rafay/cli
-  publish_workload:
-    description: test8
-    parameters: pod-only.yaml
-      workload: kvxdqvm
-        description: test8
-        type: string
+#   publish_workload:
+#     description: test8
+#     parameters: pod-only.yaml
+#       workload: kvxdqvm
+#         description: test8
+#         type: string
     steps:
       - run:
          ${HOME}/rctl publish workload pod-only.yaml
