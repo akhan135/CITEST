@@ -5,7 +5,8 @@
 version: 2.1
 description: |
   Deploy a Kubernetes Cluster from CircleCI using the Rafay Systems Platform. Rafay’s turnkey SaaS platform automates the highly complex deployment and operational workflows that DevOps and SRE teams implement to operate Kubernetes clusters and Kubernetes-resident apps across clusters in cloud and data center environments. The platform accelerates organizations’ respective application modernization journeys by abstracting away the complexities of Kubernetes and other open-source container management tools. Learn more: https://rafay.co/enterprise-integrations/circleci
-
+orbs: 
+  rafay: rafaysystems/rafay@1.0.7
 display:
   source_url: https://github.com/RafaySystems/circleci-orb
   home_url: https://rafay.co
