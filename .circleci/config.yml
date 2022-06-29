@@ -223,7 +223,8 @@ examples:
               - rafay/delete_workload:
                   workload: demo-circleci
 
-      workflows:
+ 
+workflows:
         version: 2
         build-and-publish-workload-to-rafay:
           jobs:
@@ -241,3 +242,4 @@ examples:
                   - Publish-Workload
                   - Test-Workload
 
+        
