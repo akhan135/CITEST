@@ -1,0 +1,6 @@
+name: test9
+namespace: default
+project: akhaneks
+type: NativeYaml
+clusters: "amjad-eks2"
+payload: ./workload.yaml
